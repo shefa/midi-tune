@@ -1,3 +1,6 @@
+mido
+matplotlib
+tensorflowjs
 tensorflow
 keras
 pandas

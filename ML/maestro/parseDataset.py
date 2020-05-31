@@ -36,7 +36,7 @@ def extract_notes_duration(x):
 				y[notes[note]].append(abs_time)
 				notes[note]=0
 			else:
-				notes[note]=len(y)
+				notes[note]=j.note-lowest_note
 				y.append([note,j.velocity/126])
 	return y
 

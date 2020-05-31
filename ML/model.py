@@ -9,6 +9,7 @@ from collections import deque
 from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Dropout, Dense, LSTM, Activation, BatchNormalization
+import tensorflowjs #The scripts tensorflowjs_converter and tensorflowjs_wizard are installed in '/home/shefa/.local/bin'
 
 import wandb
 from wandb.keras import WandbCallback
@@ -61,6 +62,8 @@ print("Dataset loaded.")
 # sequence generation
 print("generating train..")
 train_x, train_y = make_sequences(data_parsed[0])
+picke.dump(train_x,open(f"trainx-{typemap[config.input_data_type]}",'wb'))
+picke.dump(train_y,open(f"trainy-{typemap[config.input_data_type]}",'wb'))
 print("generating test..")
 test_x, test_y = make_sequences(data_parsed[2])
 print("generating validation..")
@@ -91,3 +94,4 @@ print('Test accuracy:', score[1])
 # Save model
 atm = str(time.strftime("%H-%M"))
 model.save(f"models/{typemap[config.input_data_type]}-{atm}")
+tfjs.converters.save_keras_model(model, f"models/js/{typemap[config.input_data_type]}-{atm}")
