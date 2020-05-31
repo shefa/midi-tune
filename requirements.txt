@@ -1,6 +1,6 @@
 mido
 matplotlib
-tensorflowjs
+tensorflow_hub
 tensorflow
 keras
 pandas

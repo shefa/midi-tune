@@ -28,6 +28,7 @@ hyperparameter_defaults = dict(
 )
 typemap = ['basic', 'duration', 'delta', 'delta_events']
 data_split = ['train', 'validation', 'test']
+generated = False
 
 # Initialize wandb
 wandb.init(config=hyperparameter_defaults)
@@ -39,8 +40,10 @@ def make_sequences(data):
 	s_out = []
 	sequences = []
 	prev_notes = deque(maxlen=config.sequence_length)
-
+	cnt, sz = 0, len(data)
 	for notes in data:
+		print(f'{cnt}/{sz}')
+		cnt+=1
 		for i in notes:
 			if len(prev_notes) == config.sequence_length:
 				sequences.append([np.array(prev_notes),i[0]])
@@ -60,14 +63,26 @@ data_parsed = [pickle.load(open(f'rick-{typemap[config.input_data_type]}-{x}','r
 print("Dataset loaded.")
 
 # sequence generation
-print("generating train..")
-train_x, train_y = make_sequences(data_parsed[0])
-picke.dump(train_x,open(f"trainx-{typemap[config.input_data_type]}",'wb'))
-picke.dump(train_y,open(f"trainy-{typemap[config.input_data_type]}",'wb'))
-print("generating test..")
-test_x, test_y = make_sequences(data_parsed[2])
-print("generating validation..")
-validation_x, validation_y = make_sequences(data_parsed[1])
+if not generated:
+	print("generating train..")
+	train_x, train_y = make_sequences(data_parsed[0])
+	picke.dump(train_x,open(f"trainx-{typemap[config.input_data_type]}",'wb'))
+	picke.dump(train_y,open(f"trainy-{typemap[config.input_data_type]}",'wb'))
+	print("generating test..")
+	test_x, test_y = make_sequences(data_parsed[2])
+	picke.dump(test_x,open(f"testx-{typemap[config.input_data_type]}",'wb'))
+	picke.dump(test_y,open(f"testy-{typemap[config.input_data_type]}",'wb'))
+	print("generating validation..")
+	validation_x, validation_y = make_sequences(data_parsed[1])
+	picke.dump(validation_x,open(f"validationx-{typemap[config.input_data_type]}",'wb'))
+	picke.dump(validation_y,open(f"validationy-{typemap[config.input_data_type]}",'wb'))
+else:
+	train_x=picke.load(open(f"trainx-{typemap[config.input_data_type]}",'rb'))
+	train_y=picke.load(open(f"trainy-{typemap[config.input_data_type]}",'rb'))
+	test_x=picke.load(open(f"testx-{typemap[config.input_data_type]}",'rb'))
+	test_y=picke.load(open(f"testy-{typemap[config.input_data_type]}",'rb'))
+	validation_x=picke.load(open(f"validationx-{typemap[config.input_data_type]}",'rb'))
+	validation_y=picke.load(open(f"validationy-{typemap[config.input_data_type]}",'rb'))
 
 print("Sequences created")
 
@@ -84,14 +99,15 @@ model.add(Dropout(config.dropout))
 model.add(Dense(88, activation='softmax'))
 
 opt = keras.optimizers.Adam(lr=config.learn_rate, decay=config.decay)
-
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-model.fit(train_x, train_y,  validation_data=(test_x, test_y), epochs=config.epochs,callbacks=[WandbCallback()])
-
-score = model.evaluate(validation_x, validation_y, verbose=0)
-print('Test loss:', score[0])
-print('Test accuracy:', score[1])
-# Save model
 atm = str(time.strftime("%H-%M"))
-model.save(f"models/{typemap[config.input_data_type]}-{atm}")
-tfjs.converters.save_keras_model(model, f"models/js/{typemap[config.input_data_type]}-{atm}")
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+try:
+	model.fit(train_x, train_y,  validation_data=(test_x, test_y), epochs=config.epochs,callbacks=[WandbCallback()])
+except KeyboardInterrupt:
+	score = model.evaluate(validation_x, validation_y, verbose=0)
+	print('Test loss:', score[0])
+	print('Test accuracy:', score[1])
+finally:
+	# Save model
+	model.save(f"models/{typemap[config.input_data_type]}-{atm}")
+	tfjs.converters.save_keras_model(model, f"models/js/{typemap[config.input_data_type]}-{atm}")
