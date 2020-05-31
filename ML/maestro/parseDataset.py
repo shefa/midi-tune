@@ -31,13 +31,13 @@ def extract_notes_duration(x):
 	for j in x:
 		abs_time+=j.time
 		if j.type=='note_on':
-			note = (j.note-lowest_note)/highest_note
+			note = j.note-lowest_note
 			if j.velocity==0:
 				y[notes[note]].append(abs_time)
 				notes[note]=0
 			else:
-				notes[note]=j.note-lowest_note
-				y.append([note,j.velocity/126])
+				notes[note]=len(y)
+				y.append([note/highest_note,j.velocity/126])
 	return y
 
 def extract_notes_delta(x):

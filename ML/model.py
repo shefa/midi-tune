@@ -18,13 +18,13 @@ hyperparameter_defaults = dict(
   dropout = 0.2,
   hidden_layer_size = 256,
   layer_1_size = 256,
-  layer_2_size = 512,
-  layer_3_size = 512,
+  layer_2_size = 256,
+  layer_3_size = 256,
   learn_rate = 0.01,
   decay = 1e-6,
   epochs = 8,
   sequence_length = 100,
-  input_data_type = 2, # delta
+  input_data_type = 0, # delta
 )
 typemap = ['basic', 'duration', 'delta', 'delta_events']
 data_split = ['train', 'validation', 'test']
@@ -66,23 +66,23 @@ print("Dataset loaded.")
 if not generated:
 	print("generating train..")
 	train_x, train_y = make_sequences(data_parsed[0])
-	picke.dump(train_x,open(f"trainx-{typemap[config.input_data_type]}",'wb'))
-	picke.dump(train_y,open(f"trainy-{typemap[config.input_data_type]}",'wb'))
+	pickle.dump(train_x,open(f"trainx-{typemap[config.input_data_type]}",'wb'))
+	pickle.dump(train_y,open(f"trainy-{typemap[config.input_data_type]}",'wb'))
 	print("generating test..")
 	test_x, test_y = make_sequences(data_parsed[2])
-	picke.dump(test_x,open(f"testx-{typemap[config.input_data_type]}",'wb'))
-	picke.dump(test_y,open(f"testy-{typemap[config.input_data_type]}",'wb'))
+	pickle.dump(test_x,open(f"testx-{typemap[config.input_data_type]}",'wb'))
+	pickle.dump(test_y,open(f"testy-{typemap[config.input_data_type]}",'wb'))
 	print("generating validation..")
 	validation_x, validation_y = make_sequences(data_parsed[1])
-	picke.dump(validation_x,open(f"validationx-{typemap[config.input_data_type]}",'wb'))
-	picke.dump(validation_y,open(f"validationy-{typemap[config.input_data_type]}",'wb'))
+	pickle.dump(validation_x,open(f"validationx-{typemap[config.input_data_type]}",'wb'))
+	pickle.dump(validation_y,open(f"validationy-{typemap[config.input_data_type]}",'wb'))
 else:
-	train_x=picke.load(open(f"trainx-{typemap[config.input_data_type]}",'rb'))
-	train_y=picke.load(open(f"trainy-{typemap[config.input_data_type]}",'rb'))
-	test_x=picke.load(open(f"testx-{typemap[config.input_data_type]}",'rb'))
-	test_y=picke.load(open(f"testy-{typemap[config.input_data_type]}",'rb'))
-	validation_x=picke.load(open(f"validationx-{typemap[config.input_data_type]}",'rb'))
-	validation_y=picke.load(open(f"validationy-{typemap[config.input_data_type]}",'rb'))
+	train_x=pickle.load(open(f"trainx-{typemap[config.input_data_type]}",'rb'))
+	train_y=pickle.load(open(f"trainy-{typemap[config.input_data_type]}",'rb'))
+	test_x=pickle.load(open(f"testx-{typemap[config.input_data_type]}",'rb'))
+	test_y=pickle.load(open(f"testy-{typemap[config.input_data_type]}",'rb'))
+	validation_x=pickle.load(open(f"validationx-{typemap[config.input_data_type]}",'rb'))
+	validation_y=pickle.load(open(f"validationy-{typemap[config.input_data_type]}",'rb'))
 
 print("Sequences created")
 
