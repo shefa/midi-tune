@@ -23,7 +23,10 @@ hyperparameter_defaults = dict(
   sequence_length = 100,
   input_data_type = 0,
 )
-typemap = ['basic', 'duration', 'delta', 'delta_events']
+
+data_folder = "saved_data/"
+sequence_folder = "saved_sequences/"
+typemap = ['basic', 'basic_velocity', 'delta', 'duration',  'delta_events']
 data_split = ['train', 'validation', 'test']
 
 # Initialize wandb
@@ -32,14 +35,38 @@ config = wandb.config
 data_type=typemap[config.input_data_type]
 
 #load data
-sequence_folder = "saved_sequences/"
-train_x = 		pickle.load(open(f"{saved_sequences}trainx-{data_type}",		'rb'))
-train_y = 		pickle.load(open(f"{saved_sequences}trainy-{data_type}",		'rb'))
-test_x =  		pickle.load(open(f"{saved_sequences}testx-{data_type}",			'rb'))
-test_y =  		pickle.load(open(f"{saved_sequences}testy-{data_type}",			'rb'))
-validation_x =  pickle.load(open(f"{saved_sequences}validationx-{data_type}",	'rb'))
-validation_y =  pickle.load(open(f"{saved_sequences}validationy-{data_type}",	'rb'))
+def load_data():
+	train_x = 		pickle.load(open(f"{sequence_folder}trainx-{data_type}",		'rb'))
+	train_y = 		pickle.load(open(f"{sequence_folder}trainy-{data_type}",		'rb'))
+	test_x =  		pickle.load(open(f"{sequence_folder}testx-{data_type}",			'rb'))
+	test_y =  		pickle.load(open(f"{sequence_folder}testy-{data_type}",			'rb'))
+	validation_x =  pickle.load(open(f"{sequence_folder}validationx-{data_type}",	'rb'))
+	validation_y =  pickle.load(open(f"{sequence_folder}validationy-{data_type}",	'rb'))
+	return train_x, train_y, test_x, test_y, validation_x, validation_y
 
+def create_data():
+	print("Loading dataset..")
+	data_parsed = [pickle.load(open(f'{data_folder}rick-{data_type}-{x}','rb')) for x in data_split]
+	print("generating train..")
+	train_x, train_y = make_sequences(data_parsed[0])
+	print("generating test..")
+	test_x, test_y = make_sequences(data_parsed[2])
+	print("generating validation..")
+	validation_x, validation_y = make_sequences(data_parsed[1])
+	return train_x, train_y, test_x, test_y, validation_x, validation_y
+
+def save_data():
+	print("saving train..")
+	pickle.dump(train_x,open(f"{sequence_folder}trainx-{data_type}",'wb'))
+	pickle.dump(train_y,open(f"{sequence_folder}trainy-{data_type}",'wb'))
+	print("saving test..")
+	pickle.dump(test_x,open(f"{sequence_folder}testx-{data_type}",'wb'))
+	pickle.dump(test_y,open(f"{sequence_folder}testy-{data_type}",'wb'))
+	print("saving validation..")
+	pickle.dump(validation_x,open(f"{sequence_folder}validationx-{data_type}",'wb'))
+	pickle.dump(validation_y,open(f"{sequence_folder}validationy-{data_type}",'wb'))
+
+train_x, train_y, test_x, test_y, validation_x, validation_y = create_data()
 print("Sequences loaded")
 
 # create model
