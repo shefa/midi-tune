@@ -11,6 +11,8 @@ import tensorflowjs #The scripts tensorflowjs_converter and tensorflowjs_wizard 
 import wandb
 from wandb.keras import WandbCallback
 
+from bigbrain import make_sequences_basic as make_sequences
+
 hyperparameter_defaults = dict(
   dropout = 0.2,
   hidden_layer_size = 256,
@@ -48,11 +50,11 @@ def create_data():
 	print("Loading dataset..")
 	data_parsed = [pickle.load(open(f'{data_folder}rick-{data_type}-{x}','rb')) for x in data_split]
 	print("generating train..")
-	train_x, train_y = make_sequences(data_parsed[0])
+	train_x, train_y = make_sequences(data_parsed[0], config.sequence_length)
 	print("generating test..")
-	test_x, test_y = make_sequences(data_parsed[2])
+	test_x, test_y = make_sequences(data_parsed[2], config.sequence_length)
 	print("generating validation..")
-	validation_x, validation_y = make_sequences(data_parsed[1])
+	validation_x, validation_y = make_sequences(data_parsed[1], config.sequence_length)
 	return train_x, train_y, test_x, test_y, validation_x, validation_y
 
 def save_data():
