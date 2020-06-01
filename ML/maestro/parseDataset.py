@@ -26,16 +26,16 @@ highest_note = 87
 #velocities=[0 for i in range(127)]
 
 def extract_notes_basic(x):
-	return np.array([j.note-lowest_note for j in x if j.type=='note_on' and j.velocity])
+	return np.array([j.note-lowest_note for j in x if j.type=='note_on' and j.velocity], dtype=np.uint8)
 
 def extract_notes_basic_velocity(x):
-	return np.array([ [j.note-lowest_note, j.velocity] for j in x if j.type=='note_on' and j.velocity])
+	return np.array([ [j.note-lowest_note, j.velocity] for j in x if j.type=='note_on' and j.velocity], dtype=np.uint8)
 
 def extract_notes_delta(x):
 	y = np.cumsum([j.time for j in x])
-	y = [i if i<=300 else int(276+np.sqrt(i)) for i in y ] # retarded data smoothing with 95th quantile onward
+	y = [i if i<200 else int(200+np.sqrt(i)) for i in y ] # retarded data smoothing with .9999th quantile onward
 	z = [ [j.note-lowest_note,j.velocity,i] for j,i in zip(x,y) if j.type=='note_on' and j.velocity] # notes with their time
-	return np.array([z[0]] + [ [z[i-1][0],z[i-1][1],z[i][2]-z[i-1][2] ] for i in range(1,len(z))]) # make deltas
+	return np.array([z[0]] + [ [z[i-1][0],z[i-1][1],z[i][2]-z[i-1][2] ] for i in range(1,len(z))], dtype=np.uint8) # make deltas
 	# 0 for first item because its delta=0
 
 def extract_notes_duration(x):
@@ -58,13 +58,13 @@ def extract_notes_duration(x):
 		for j in i:
 			del y[j[0]]
 
-	return np.array(y)
+	return np.array(y, dtype=np.uint16)
 
 def extract_notes_events(x):
 	y = np.cumsum([j.time for j in x])
-	y = [i if i<=300 else int(276+np.sqrt(i)) for i in y ] # retarded data smoothing with 95th quantile onward
+	y = [i if i<200 else int(200+np.sqrt(i)) for i in y ] # retarded data smoothing with 95th quantile onward
 	z = [ [j.note-lowest_note,j.velocity,i] for j,i in zip(x,y) if j.type=='note_on'] # notes with their time
-	return np.array([z[0]] + [ [z[i-1][0],z[i-1][1],z[i][2]-z[i-1][2] ] for i in range(1,len(z))]) # make deltas
+	return np.array([z[0]] + [ [z[i-1][0],z[i-1][1],z[i][2]-z[i-1][2] ] for i in range(1,len(z))], dtype=np.uint8) # make deltas
 	# 0 for first item because its delta=0
 
 def extract_notes(x,mode=0):
