@@ -15,7 +15,7 @@ from bigbrain import make_sequences_choice as make_sequences #
 from bigbrain import CustomCallback, loss_choice
 
 hyperparameter_defaults = dict(
-  dropout = 0.3,
+  dropout = 0.2,
   hidden_layer_size = 128,
   layer_1_size = 128,
   layer_2_size = 128,
@@ -25,7 +25,7 @@ hyperparameter_defaults = dict(
   epochs = 8,
   batch_size = 128,
   sequence_length = 200,
-  input_data_type = 2,
+  input_data_type = 0,
 )
 
 data_folder = "saved_data/"
@@ -52,11 +52,11 @@ def create_data():
     print("Loading dataset..")
     data_parsed = [pickle.load(open(f'{data_folder}rick-{data_type}-{x}','rb')) for x in data_split]
     print("generating train..")
-    train_x, train_y = make_sequences(data_parsed[0][:300], config.sequence_length, config.input_data_type)
+    train_x, train_y = make_sequences(data_parsed[0][:100], config.sequence_length, config.input_data_type)
     print("generating test..")
-    test_x, test_y = make_sequences(data_parsed[2][:50], config.sequence_length, config.input_data_type)
+    test_x, test_y = make_sequences(data_parsed[2][:10], config.sequence_length, config.input_data_type)
     print("generating validation..")
-    validation_x, validation_y = make_sequences(data_parsed[1][:50], config.sequence_length, config.input_data_type)
+    validation_x, validation_y = make_sequences(data_parsed[1][:10], config.sequence_length, config.input_data_type)
     return train_x, train_y, test_x, test_y, validation_x, validation_y
 
 def save_data():
