@@ -6,13 +6,13 @@ from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras.layers import Dropout, Dense, LSTM, Activation, BatchNormalization
-import tensorflowjs #The scripts tensorflowjs_converter and tensorflowjs_wizard are installed in '/home/shefa/.local/bin'
+import tensorflowjs as tfjs #The scripts tensorflowjs_converter and tensorflowjs_wizard are installed in '/home/shefa/.local/bin'
 
 import wandb
 from wandb.keras import WandbCallback
 
-from bigbrain import make_sequences_basic as make_sequences
-from bigbrain import CustomCallback
+from bigbrain import make_sequences_choice as make_sequences # 
+from bigbrain import CustomCallback, loss_choice
 
 hyperparameter_defaults = dict(
   dropout = 0.3,
@@ -23,9 +23,9 @@ hyperparameter_defaults = dict(
   learn_rate = 0.01,
   decay = 1e-6,
   epochs = 8,
-  batch_size = 256,
+  batch_size = 128,
   sequence_length = 200,
-  input_data_type = 0,
+  input_data_type = 2,
 )
 
 data_folder = "saved_data/"
@@ -52,11 +52,11 @@ def create_data():
     print("Loading dataset..")
     data_parsed = [pickle.load(open(f'{data_folder}rick-{data_type}-{x}','rb')) for x in data_split]
     print("generating train..")
-    train_x, train_y = make_sequences(data_parsed[0][:400], config.sequence_length)
+    train_x, train_y = make_sequences(data_parsed[0][:100], config.sequence_length, config.input_data_type)
     print("generating test..")
-    test_x, test_y = make_sequences(data_parsed[2][400:500], config.sequence_length)
+    test_x, test_y = make_sequences(data_parsed[0][400:420], config.sequence_length, config.input_data_type)
     print("generating validation..")
-    validation_x, validation_y = make_sequences(data_parsed[1][-100:], config.sequence_length)
+    validation_x, validation_y = make_sequences(data_parsed[0][-10:], config.sequence_length, config.input_data_type)
     return train_x, train_y, test_x, test_y, validation_x, validation_y
 
 def save_data():
@@ -84,12 +84,12 @@ model.add(Dense(88, activation='softmax'))
 
 opt = Adam(lr=config.learn_rate, decay=config.decay)
 atm = str(time.strftime("%H-%M"))
-model.compile(loss='sparse_categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+model.compile(loss=loss_choice(config.input_data_type), optimizer=opt, metrics=['accuracy'])
 try:
     model.fit(train_x, train_y,  validation_data=(test_x, test_y), epochs=config.epochs, batch_size=config.batch_size, callbacks=[WandbCallback(), CustomCallback()])
 except KeyboardInterrupt:
     print("-------------- Something happen -------")
-    score = model.evaluate(validation_x, validation_y, verbose=0)
+    score = model.evaluate(validation_x, validation_y, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 finally:

@@ -56,12 +56,53 @@ def make_sequences_basic(data,sequence_length):
 
     s_in = np.array(s_in, dtype=np.int8)
     s_out = np.array(s_out, dtype=np.int8)
-    n_patterns = len(s_in)
-    s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
-    s_out = np.reshape(s_out, (n_patterns, 1))
+    #n_patterns = len(s_in)
+    #s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
+    #s_out = np.reshape(s_out, (n_patterns, 1))
+
+    return to_categorical(s_in,num_classes=88,dtype=np.bool), to_categorical(s_out,num_classes=88, dtype=np.bool)
+
+def make_sequences_delta(data,sequence_length):
+    s_in = []
+    s_out = []
+    sequences = []
+    prev_notes = deque(maxlen=sequence_length)
+    cnt, sz = 0, len(data)
+    for notes in data:
+        print(f'{cnt}/{sz}')
+        cnt+=1
+        for i in notes:
+            if len(prev_notes) == sequence_length:
+                sequences.append([np.array(prev_notes),i[0]])
+            prev_notes.append(i)
+
+    random.shuffle(sequences)
+
+    for i,o in sequences:
+        s_in.append(i)
+        s_out.append(o)
+
+    s_in = np.array(s_in, dtype=np.uint8)
+    s_out = np.array(s_out, dtype=np.uint8)
+    #n_patterns = len(s_in)
+    #s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
+    #s_out = np.reshape(s_out, (n_patterns, 1))
 
     return s_in, s_out #to_categorical(s_out,num_classes=88, dtype=np.bool)
 
+def loss_choice(type):
+    if type==0:
+        return 'categorical_crossentropy'
+    else:
+        return 'sparse_categorical_crossentropy'
+
+def make_sequences_choice(data,sequence_length, type):
+    if type==0:
+        return make_sequences_basic(data,sequence_length)
+    if type==1:
+        return make_sequences_basic(data,sequence_length)
+    if type==2:
+        return make_sequences_delta(data,sequence_length)
 
 def vibe_check(d):
     print(max(d), min(d))
