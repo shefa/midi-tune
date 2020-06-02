@@ -40,10 +40,12 @@ def make_sequences_basic(data,sequence_length):
 		s_out.append(o)
 
 	n_patterns = len(s_in)
-	
+
 	s_in = np.array(s_in, dtype=np.int8)
 	s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
-	return s_in, to_categorical(s_out,num_classes=88, dtype=np.bool)
+	s_out = np.array(s_out, dtype=np.int8)
+	s_out = np.reshape(s_out, (n_patterns, 1))
+	return s_in, s_out #to_categorical(s_out,num_classes=88, dtype=np.bool)
 
 
 def vibe_check(d):
