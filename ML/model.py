@@ -15,10 +15,10 @@ from bigbrain import make_sequences_basic as make_sequences
 
 hyperparameter_defaults = dict(
   dropout = 0.2,
-  hidden_layer_size = 256,
-  layer_1_size = 256,
-  layer_2_size = 256,
-  layer_3_size = 256,
+  hidden_layer_size = 64,
+  layer_1_size = 128,
+  layer_2_size = 128,
+  layer_3_size = 128,
   learn_rate = 0.01,
   decay = 1e-6,
   epochs = 8,
@@ -83,7 +83,7 @@ model.add(Dense(88, activation='softmax'))
 
 opt = Adam(lr=config.learn_rate, decay=config.decay)
 atm = str(time.strftime("%H-%M"))
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+model.compile(loss='sparse_categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 try:
 	model.fit(train_x, train_y,  validation_data=(test_x, test_y), epochs=config.epochs,callbacks=[WandbCallback()])
 except KeyboardInterrupt:
