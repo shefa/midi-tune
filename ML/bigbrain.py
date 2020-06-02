@@ -73,7 +73,7 @@ def make_sequences_delta(data,sequence_length):
         cnt+=1
         for i in notes:
             if len(prev_notes) == sequence_length:
-                sequences.append([np.array(prev_notes),i[0]])
+                sequences.append([np.array(prev_notes),i[0]%12])
             prev_notes.append(i)
 
     random.shuffle(sequences)
@@ -88,10 +88,10 @@ def make_sequences_delta(data,sequence_length):
     #s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
     #s_out = np.reshape(s_out, (n_patterns, 1))
 
-    return s_in, s_out #to_categorical(s_out,num_classes=88, dtype=np.bool)
+    return s_in, to_categorical(s_out,num_classes=12, dtype=np.bool)
 
 def loss_choice(type):
-    if type==0:
+    if type==0 or type==2:
         return 'categorical_crossentropy'
     else:
         return 'sparse_categorical_crossentropy'

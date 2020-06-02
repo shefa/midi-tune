@@ -52,11 +52,11 @@ def create_data():
     print("Loading dataset..")
     data_parsed = [pickle.load(open(f'{data_folder}rick-{data_type}-{x}','rb')) for x in data_split]
     print("generating train..")
-    train_x, train_y = make_sequences(data_parsed[0], config.sequence_length, config.input_data_type)
+    train_x, train_y = make_sequences(data_parsed[0][:300], config.sequence_length, config.input_data_type)
     print("generating test..")
-    test_x, test_y = make_sequences(data_parsed[2], config.sequence_length, config.input_data_type)
+    test_x, test_y = make_sequences(data_parsed[2][:50], config.sequence_length, config.input_data_type)
     print("generating validation..")
-    validation_x, validation_y = make_sequences(data_parsed[1], config.sequence_length, config.input_data_type)
+    validation_x, validation_y = make_sequences(data_parsed[1][:50], config.sequence_length, config.input_data_type)
     return train_x, train_y, test_x, test_y, validation_x, validation_y
 
 def save_data():
@@ -80,7 +80,7 @@ model.add(LSTM(config.layer_1_size,input_shape=(train_x.shape[1], train_x.shape[
 model.add(LSTM(config.layer_3_size))
 model.add(Dense(config.hidden_layer_size, activation='relu'))
 model.add(Dropout(config.dropout))
-model.add(Dense(88, activation='softmax'))
+model.add(Dense(12, activation='softmax'))
 
 opt = Adam(lr=config.learn_rate, decay=config.decay)
 atm = str(time.strftime("%H-%M"))
