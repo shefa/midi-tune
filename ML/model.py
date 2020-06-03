@@ -28,7 +28,7 @@ hyperparameter_defaults = dict(
   epochs = 8,
   batch_size = 1024,
   sequence_length = 200,
-  input_data_type = 0,
+  input_data_type = 4,
 )
 
 data_folder = "saved_data/"

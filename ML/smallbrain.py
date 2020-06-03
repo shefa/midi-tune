@@ -90,15 +90,16 @@ def data_to_sequences(data, sequence_length, suffix, batch_size, start_index=0):
 def brain(data_type, sequence_length, batch_size=1024):
     print("Loading dataset..")
     data_parsed = [pickle.load(open(f'saved_data/rick-{typemap[data_type]}-{x}','rb')) for x in data_split]
+    print(len(data_parsed[0]),len(data_parsed[1]), len(data_parsed[2]))
     print("generating train..")
-    train_cnt, train_x, train_y = data_to_sequences(data_parsed[0], sequence_length, 'train', batch_size)
+    train_cnt, train_x, train_y = data_to_sequences(data_parsed[0][:100], sequence_length, 'train', batch_size)
     print(f'{train_cnt} saved, {len(train_x)} sequences leftover')
     print("generating test..")
-    test_cnt, test_x, test_y = data_to_sequences(data_parsed[1], sequence_length, 'test', batch_size)
+    test_cnt, test_x, test_y = data_to_sequences(data_parsed[1][:100], sequence_length, 'test', batch_size)
     print(f'{test_cnt} saved, {len(test_x)} sequences leftover')
-    print("generating validation..")
-    validation_cnt, validation_x, validation_y = data_to_sequences(data_parsed[2], sequence_length, 'validation', batch_size)
-    print(f'{validation_cnt} saved, {len(validation_x)} sequences leftover')
+    #print("generating validation..")
+    #validation_cnt, validation_x, validation_y = data_to_sequences(data_parsed[2], sequence_length, 'validation', batch_size)
+   # print(f'{validation_cnt} saved, {len(validation_x)} sequences leftover')
     return train_x.shape[2], train_cnt, test_cnt
 
 
