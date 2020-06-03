@@ -33,8 +33,66 @@ def batch_generator(Train_df, batch_size,steps):
 class CustomCallback(Callback):
     def on_train_batch_end(self, batch, logs=None):
         wandb.log({'accuracy': logs['accuracy'], 'loss': logs['loss']})
+    
+def make_sequences_basic_one_hot(data,sequence_length):
+    s_in = []
+    s_out = []
+    sequences = []
+    prev_notes = deque(maxlen=sequence_length)
+    cnt, sz = 0, len(data)
+    for notes in data:
+        prev_notes.clear()
+        print(f'{cnt}/{sz}')
+        cnt+=1
+        for i in notes:
+            if len(prev_notes) == sequence_length:
+                sequences.append([np.array(prev_notes),i%12])
+            prev_notes.append(i)
+
+    random.shuffle(sequences)
+
+    for i,o in sequences:
+        s_in.append(i)
+        s_out.append(o)
+    
+    s_in = np.array(s_in, dtype=np.int8)
+    s_out = np.array(s_out, dtype=np.int8)
+    s_out = np.reshape(s_out, (len(s_out), 1))
+
+    return to_categorical(s_in, num_classes=88, dtype=np.bool), s_out
+
+def make_sequences_basic_one_half(data,sequence_length):
+    s_in = []
+    s_out = []
+    sequences = []
+    prev_notes = deque(maxlen=sequence_length)
+    cnt, sz = 0, len(data)
+    for notes in data:
+        prev_notes.clear()
+        print(f'{cnt}/{sz}')
+        cnt+=1
+        for i in notes:
+            if len(prev_notes) == sequence_length:
+                sequences.append([np.array(prev_notes),i%12])
+            prev_notes.append(i)
+
+    random.shuffle(sequences)
+
+    for i,o in sequences:
+        s_in.append(i)
+        s_out.append(o)
+    
+    #s_in = (np.array(s_in)/87.)
+    s_in = np.array(s_in, dtype=np.int8)
+    s_out = np.array(s_out, dtype=np.int8)
+    n_patterns = len(s_in)
+    s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
+    s_out = np.reshape(s_out, (n_patterns, 1))
+
+    return s_in, s_out#to_categorical(s_in, num_classes=88, dtype=np.bool), s_out
 
 def make_sequences_basic(data,sequence_length):
+    return make_sequences_basic_one_hot(data,sequence_length)
     s_in = []
     s_out = []
     sequences = []
@@ -54,13 +112,47 @@ def make_sequences_basic(data,sequence_length):
         s_in.append(i)
         s_out.append(o)
 
+    #s_in = ((np.array(s_in)/87.)*2.)-1
     s_in = np.array(s_in, dtype=np.int8)
     s_out = np.array(s_out, dtype=np.int8)
+    n_patterns = len(s_in)
+    #s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
+    s_out = np.reshape(s_out, (n_patterns, 1))
+
+    return s_in, s_out #to_categorical(s_out,num_classes=12, dtype=np.bool)
+
+def make_sequences_duration(data,sequence_length):
+    s_in = []
+    s_out = []
+    sequences = []
+    prev_notes = deque(maxlen=sequence_length)
+    cnt, sz = 0, len(data)
+    
+    maxduration = np.max([i[2] for sub in data for i in sub])
+    for notes in data:
+        print(f'{cnt}/{sz}')
+        cnt+=1
+        for i in notes:
+            if len(prev_notes) == sequence_length:
+                sequences.append([np.array(prev_notes),i[0]%12])
+            prev_notes.append([
+                ((i[0]/87.0)*2)-1, 
+                ((i[1]/127.0)*2)-1,
+                ((i[2]/maxduration)*2.)-1])
+
+    random.shuffle(sequences)
+
+    for i,o in sequences:
+        s_in.append(i)
+        s_out.append(o)
+
+    s_in = np.array(s_in)
+    s_out = np.array(s_out, dtype=np.uint8)
     #n_patterns = len(s_in)
     #s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
     #s_out = np.reshape(s_out, (n_patterns, 1))
 
-    return to_categorical(s_in,num_classes=88,dtype=np.bool), to_categorical(s_out,num_classes=12, dtype=np.bool)
+    return s_in, to_categorical(s_out,num_classes=12, dtype=np.bool)
 
 def make_sequences_delta(data,sequence_length):
     s_in = []
@@ -75,14 +167,22 @@ def make_sequences_delta(data,sequence_length):
             if len(prev_notes) == sequence_length:
                 sequences.append([np.array(prev_notes),i[0]%12])
             prev_notes.append(i)
+            #    [((i[0]/87.0)*2)-1, 
+            #    ((i[1]/127.0)*2)-1,
+            #    ((i[2]/255.)*2.)-1])
 
     random.shuffle(sequences)
 
     for i,o in sequences:
-        s_in.append(i)
+        s_in.append(np.concatenate([
+            to_categorical(i[:,0], num_classes=88, dtype=np.bool),
+            to_categorical(i[:,1], num_classes=128, dtype=np.bool),
+            to_categorical(i[:,2], num_classes=256, dtype=np.bool)
+        ], axis=1))
+        #s_in.append(i)
         s_out.append(o)
 
-    s_in = np.array(s_in, dtype=np.uint8)
+    s_in = np.array(s_in, dtype=np.bool)
     s_out = np.array(s_out, dtype=np.uint8)
     #n_patterns = len(s_in)
     #s_in = np.reshape(s_in, (n_patterns, sequence_length, 1))
@@ -91,7 +191,8 @@ def make_sequences_delta(data,sequence_length):
     return s_in, to_categorical(s_out,num_classes=12, dtype=np.bool)
 
 def loss_choice(type):
-    if type==0 or type==2:
+    return 'sparse_categorical_crossentropy'
+    if type==0 or type==2 or type==3:
         return 'categorical_crossentropy'
     else:
         return 'sparse_categorical_crossentropy'
@@ -103,6 +204,8 @@ def make_sequences_choice(data,sequence_length, type):
         return make_sequences_basic(data,sequence_length)
     if type==2:
         return make_sequences_delta(data,sequence_length)
+    if type==3:
+        return make_sequences_duration(data,sequence_length)
 
 def vibe_check(d):
     print(max(d), min(d))

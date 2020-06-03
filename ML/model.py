@@ -23,9 +23,10 @@ hyperparameter_defaults = dict(
   learn_rate = 0.01,
   decay = 1e-6,
   epochs = 8,
-  batch_size = 128,
+  batch_size = 1024,
   sequence_length = 200,
   input_data_type = 0,
+  input_data_size = 50, # idk
 )
 
 data_folder = "saved_data/"
@@ -52,11 +53,11 @@ def create_data():
     print("Loading dataset..")
     data_parsed = [pickle.load(open(f'{data_folder}rick-{data_type}-{x}','rb')) for x in data_split]
     print("generating train..")
-    train_x, train_y = make_sequences(data_parsed[0][:100], config.sequence_length, config.input_data_type)
+    train_x, train_y = make_sequences(data_parsed[0][:config.input_data_size], config.sequence_length, config.input_data_type)
     print("generating test..")
-    test_x, test_y = make_sequences(data_parsed[2][:10], config.sequence_length, config.input_data_type)
+    test_x, test_y = make_sequences(data_parsed[0][:int(config.input_data_size/10)], config.sequence_length, config.input_data_type)
     print("generating validation..")
-    validation_x, validation_y = make_sequences(data_parsed[1][:10], config.sequence_length, config.input_data_type)
+    validation_x, validation_y = make_sequences(data_parsed[0][:int(config.input_data_size/10)], config.sequence_length, config.input_data_type)
     return train_x, train_y, test_x, test_y, validation_x, validation_y
 
 def save_data():
@@ -77,7 +78,8 @@ print("Sequences loaded")
 model = Sequential()
 model.add(LSTM(config.layer_1_size,input_shape=(train_x.shape[1], train_x.shape[2]),return_sequences=True, recurrent_dropout=config.dropout))
 #model.add(LSTM(config.layer_2_size, return_sequences=True, recurrent_dropout=config.dropout))
-model.add(LSTM(config.layer_3_size))
+model.add(LSTM(config.layer_3_size, recurrent_dropout=config.dropout))
+#model.add(Dropout(config.dropout))
 model.add(Dense(config.hidden_layer_size, activation='relu'))
 model.add(Dropout(config.dropout))
 model.add(Dense(12, activation='softmax'))
@@ -96,4 +98,5 @@ finally:
     # Save model
     print("-------------- Saving model ---------- ")
     model.save(f"models/{data_type}-{atm}")
+    print("-------------- Saving js    ---------- ")
     tfjs.converters.save_keras_model(model, f"models/js/{data_type}-{atm}")
