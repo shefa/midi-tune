@@ -10,6 +10,8 @@ from keras.utils import to_categorical
 from keras.callbacks import Callback
 import wandb
 
+sequence_folder = "saved_sequences/"
+
 def toolbar_init(toolbar_width, cnt):
     sys.stdout.write("[%s]" % (" " * toolbar_width))
     sys.stdout.flush()
@@ -206,6 +208,38 @@ def make_sequences_choice(data,sequence_length, type):
         return make_sequences_delta(data,sequence_length)
     if type==3:
         return make_sequences_duration(data,sequence_length)
+
+
+def create_data():
+    print("Loading dataset..")
+    data_parsed = [pickle.load(open(f'{data_folder}rick-{data_type}-{x}','rb')) for x in data_split]
+    print("generating train..")
+    train_x, train_y = make_sequences(data_parsed[0][:config.input_data_size], config.sequence_length, config.input_data_type)
+    print("generating test..")
+    test_x, test_y = make_sequences(data_parsed[0][:int(config.input_data_size/10)], config.sequence_length, config.input_data_type)
+    print("generating validation..")
+    validation_x, validation_y = make_sequences(data_parsed[0][:int(config.input_data_size/10)], config.sequence_length, config.input_data_type)
+    return train_x, train_y, test_x, test_y, validation_x, validation_y
+
+def load_data():
+    train_x =       pickle.load(open(f"{sequence_folder}trainx-{data_type}",        'rb'))
+    train_y =       pickle.load(open(f"{sequence_folder}trainy-{data_type}",        'rb'))
+    test_x =        pickle.load(open(f"{sequence_folder}testx-{data_type}",         'rb'))
+    test_y =        pickle.load(open(f"{sequence_folder}testy-{data_type}",         'rb'))
+    validation_x =  pickle.load(open(f"{sequence_folder}validationx-{data_type}",   'rb'))
+    validation_y =  pickle.load(open(f"{sequence_folder}validationy-{data_type}",   'rb'))
+    return train_x, train_y, test_x, test_y, validation_x, validation_y
+
+def save_data():
+    print("saving train..")
+    pickle.dump(train_x,open(f"{sequence_folder}trainx-{data_type}",'wb'))
+    pickle.dump(train_y,open(f"{sequence_folder}trainy-{data_type}",'wb'))
+    print("saving test..")
+    pickle.dump(test_x,open(f"{sequence_folder}testx-{data_type}",'wb'))
+    pickle.dump(test_y,open(f"{sequence_folder}testy-{data_type}",'wb'))
+    print("saving validation..")
+    pickle.dump(validation_x,open(f"{sequence_folder}validationx-{data_type}",'wb'))
+    pickle.dump(validation_y,open(f"{sequence_folder}validationy-{data_type}",'wb'))
 
 def vibe_check(d):
     print(max(d), min(d))
