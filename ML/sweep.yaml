@@ -1,0 +1,33 @@
+program: model.py
+method: bayes
+metric:
+  goal: minimize
+  name: val_loss
+parameters:
+  batch_size:
+    values: [512,1024,2048,4096]
+  decay:
+    values: [1e-5, 1e-7]
+  dropout:
+    values: [0.15,0.2,0.3,0.4]
+  epochs:
+    values: [4,8,16]
+  hidden_layer_size:
+    values: [64,128,256]
+  input_data_size:
+    values: [500, 1000, 3000]
+  input_data_type:
+    value: 4
+  layer_1_size:
+    values: [64,128,256]
+  layer_2_size:
+    value: 128
+  layer_3_size:
+    values: [64,128,256]
+  learn_rate:
+    values: [0.001,0.01,0.003]
+  sequence_length:
+    values: [100,200,400]
+early_terminate:
+  min_iter: 3
+  type: hyperband
