@@ -62,6 +62,7 @@ try:
 	model.fit(training_generator, 
 		validation_data=validation_generator,
 		use_multiprocessing = False, 
+        epochs=config.epochs,
 		callbacks=[WandbCallback(), CustomCallback()])
 except KeyboardInterrupt:
     pass
