@@ -29,6 +29,7 @@ hyperparameter_defaults = dict(
   batch_size = 1024,
   sequence_length = 200,
   input_data_type = 4,
+  input_data_size = 3000,
 )
 
 data_folder = "saved_data/"
@@ -40,9 +41,9 @@ wandb.init(config=hyperparameter_defaults)
 config = wandb.config
 data_type=typemap[config.input_data_type]
 
-featuers, train_batches, test_batches = brain(config.input_data_type, config.sequence_length, config.batch_size)
-training_generator = DataGenerator('train', train_batches, config.batch_size)
-validation_generator = DataGenerator('test', test_batches, config.batch_size)
+features, train_batches, test_batches = 108, config.input_data_size, int(config.input_data_size/10) #brain(config.input_data_type, config.sequence_length, config.batch_size)
+training_generator =  DataGenerator('train', config.input_data_type, config.sequence_length,train_batches, config.batch_size)
+validation_generator = DataGenerator('test', config.input_data_type, config.sequence_length,test_batches,  config.batch_size)
 
 # create model
 model = Sequential()
@@ -58,7 +59,10 @@ opt = Adam(lr=config.learn_rate, decay=config.decay)
 atm = str(time.strftime("%H-%M"))
 model.compile(loss=loss_choice(config.input_data_type), optimizer=opt, metrics=['accuracy'])
 try:
-	model.fit(training_generator, validation_data=validation_generator, batch_size=config.batch_size, workers = 4, use_multiprocessing = True, callbacks=[WandbCallback(), CustomCallback()])
+	model.fit(training_generator, 
+		validation_data=validation_generator,
+		use_multiprocessing = False, 
+		callbacks=[WandbCallback(), CustomCallback()])
 except KeyboardInterrupt:
     pass
 finally:

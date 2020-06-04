@@ -106,17 +106,43 @@ def brain(data_type, sequence_length, batch_size=1024):
 
 class DataGenerator(Sequence):
     'Generates data for Keras'
-    def __init__(self, suffix, cnt, batch_size=1024):
+    def __init__(self, suffix, data_type, sequence_length, cnt, batch_size=1024):
         'Initialization'
         self.batch_size = batch_size
         self.suffix = suffix
         self.cnt = cnt
-        self.on_epoch_end()
+        self.sequence_length = sequence_length
+
+        
+        print("Loading dataset..")
+        self.data = pickle.load(open(f'saved_data/rick-{typemap[data_type]}-{suffix}','rb'))
+        print(len(self.data))
+
+        self.s_in = np.empty((0,self.sequence_length,88+8+12),dtype=np.bool)
+        self.s_out = np.empty((0,1),dtype=np.int8)
+        self.data_index = 0
+
 
     def __len__(self):
         'Denotes the number of batches per epoch'
         return self.cnt
 
+    def __generate(self):
+        t_in, t_out = make_delta_sequences(self.data[self.data_index],self.sequence_length)
+        self.s_in  = np.concatenate([ self.s_in,  t_in],axis=0)
+        self.s_out = np.concatenate([self.s_out, t_out],axis=0)
+        self.data_index+=1
+
+    def __serve_from_generated(self):
+        t_in, t_out = self.s_in[:self.batch_size], self.s_out[:self.batch_size]
+        self.s_in  =  self.s_in[self.batch_size:]
+        self.s_out = self.s_out[self.batch_size:]
+        return t_in, t_out
+
     def __getitem__(self, index):
         'Generate one batch of data'
-        return  np.load(f'saved_sequences/seq-input-{self.suffix}-{index}.npy'), np.load(f'saved_sequences/seq-output-{self.suffix}-{index}.npy')
+        while len(self.s_in) < self.batch_size:
+            self.__generate()
+        return self.__serve_from_generated()
+
+        #return  np.load(f'saved_sequences/seq-input-{self.suffix}-{index}.npy'), np.load(f'saved_sequences/seq-output-{self.suffix}-{index}.npy')
