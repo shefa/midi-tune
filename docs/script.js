@@ -29,7 +29,7 @@ initEverything();
  * Basic UI bits
  ************************/
 function initEverything() {
-  tf.loadLayersModel("model.json").then(
+  tf.loadLayersModel("/midi-tune/model.json").then(
     model => {
       miditune = model;
       //rnn.initialize().then(()=>{
