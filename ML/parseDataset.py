@@ -88,8 +88,8 @@ def extract_notes_events(x):
 	d = np.array([[z[0][0],z[0][1],delta_category(z[0][2])]] + [ [ z[i-1][0], z[i-1][1], delta_category(z[i][2]-z[i-1][2]) ] for i in range(1,len(z))])
 	deltas_only = np.array([z[i][2]-z[i-1][2] for i in range(1,len(z))])
 	min_steps = 500
-	threshold = 2048 # more info on this in the report if interested... took me some days
-	# those fuckers  - data_parsed[0][379] to data_parsed[0][381]
+	threshold = 2048 # ... took me some days
+	# those guys  - data_parsed[0][379] to data_parsed[0][381]
 	# Frédéric Chopin,"12 Etudes, Op. 25",train,2004,2004/MIDI-Unprocessed_SMF_05_R1_2004_01_ORIG_MID--AUDIO_05_R1_2004_02_Track02_wav.midi,2004/MIDI-Unprocessed_SMF_05_R1_2004_01_ORIG_MID--AUDIO_05_R1_2004_02_Track02_wav.wav,1409.28857763
 	# Frédéric Chopin,"12 Etudes, Op. 25",train,2004,2004/MIDI-Unprocessed_SMF_05_R1_2004_01_ORIG_MID--AUDIO_05_R1_2004_03_Track03_wav.midi,2004/MIDI-Unprocessed_SMF_05_R1_2004_01_ORIG_MID--AUDIO_05_R1_2004_03_Track03_wav.wav,327.327025835
 	# Frédéric Chopin,"24 Preludes, Op. 28",train,2004,2004/MIDI-Unprocessed_XP_06_R1_2004_01_ORIG_MID--AUDIO_06_R1_2004_01_Track01_wav.midi,2004/MIDI-Unprocessed_XP_06_R1_2004_01_ORIG_MID--AUDIO_06_R1_2004_01_Track01_wav.wav,2398.64035989
