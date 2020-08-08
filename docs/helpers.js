@@ -108,21 +108,7 @@ class Player {
     const button = msg.data[1]-CONSTANTS.LOWEST_PIANO_KEY_MIDI_NOTE;
     const velocity = (msg.data.length > 2) ? msg.data[2] : 0; // a velocity value might not be included with a noteOff command
     
-
-    switch (command) {
-      case 0x90: // note on
-        const timestamp2 = Date.now();
-        const delta = timestamp2 - this.timestamp;
-        this.timestamp = timestamp2;
-        window.note_on(button,velocity,delta);
-        break;
-      case 0x80: // note off
-         window.buttonUp(button);
-        break;
-      case 177:
-        window.note_on(128,0,0,0);
-        break;
-    }
+    window.midi_message_in(command,button,velocity)
   }
 }
 
@@ -304,4 +290,142 @@ class Piano {
     this.svg.appendChild(rect);
     return rect;
   }
+}
+
+let OCTAVES = 7;
+// Mousedown/up events are weird because you can mouse down in one element and mouse up
+// in another, so you're going to lose that original element and never mouse it up.
+let mouseDownButton = null;
+const player = new Player();
+const painter = new FloatyNotes();
+const piano = new Piano();
+
+/*************************
+ * Events
+ ************************/
+
+function onWindowResize() {
+  OCTAVES = window.innerWidth > 700 ? 7 : 3;
+  const bonusNotes = OCTAVES > 6 ? 4 : 0; // starts on an A, ends on a C.
+  const totalNotes = CONSTANTS.NOTES_PER_OCTAVE * OCTAVES + bonusNotes;
+  const totalWhiteNotes = CONSTANTS.WHITE_NOTES_PER_OCTAVE * OCTAVES + (bonusNotes - 1);
+  piano.resize(totalWhiteNotes);
+  painter.resize(piano.config.whiteNoteHeight);
+  piano.draw();
+}
+
+/*************************
+ * Utils and helpers
+ ************************/
+
+function updateButtonText() {
+  const btns = document.querySelectorAll(".controls button.color");
+  for (let i = 0; i < btns.length; i++) {
+    btns[i].innerHTML = `<span>${i + 1}</span><br><span>${
+      BUTTONS_DEVICE[i]
+    }</span>`;
+  }
+}
+
+
+/*************************
+ * Main UI logic
+ ************************/
+
+startDrawingLoop();
+
+function startDrawingLoop(){
+  onWindowResize();
+  updateButtonText();
+  window.requestAnimationFrame(() => painter.drawLoop());
+
+  window.addEventListener("resize", onWindowResize);
+  window.addEventListener("orientationchange", onWindowResize);
+}
+
+function showMainScreen() {
+  document.querySelector(".splash").hidden = true;
+  document.querySelector(".loaded").hidden = false;
+
+  // Output.
+  radioMidiOutYes.addEventListener("click", () => {
+    player.usingMidiOut = true;
+    midiOutBox.hidden = false;
+  });
+  radioAudioYes.addEventListener("click", () => {
+    player.usingMidiOut = false;
+    midiOutBox.hidden = true;
+  });
+  // Input.
+  radioMidiInYes.addEventListener("click", () => {
+    player.usingMidiIn = true;
+    midiInBox.hidden = false;
+    updateButtonText();
+  });
+  radioDeviceYes.addEventListener("click", () => {
+    player.usingMidiIn = false;
+    midiInBox.hidden = true;
+    updateButtonText();
+  });
+
+  // Figure out if WebMidi works.
+  if (navigator.requestMIDIAccess) {
+    midiNotSupported.hidden = true;
+    radioMidiInYes.parentElement.removeAttribute("disabled");
+    radioMidiOutYes.parentElement.removeAttribute("disabled");
+    navigator
+      .requestMIDIAccess()
+      .then(
+        midi => player.midiReady(midi),
+        err => console.log("Something went wrong with requestMIDIAccess", err)
+      );
+  } else {
+    midiNotSupported.hidden = false;
+    radioMidiInYes.parentElement.setAttribute("disabled", true);
+    radioMidiOutYes.parentElement.setAttribute("disabled", true);
+  }
+}
+
+function playNoteDown(pitch,modified,note){
+  // Hear it.
+  player.playNoteDown(pitch, 0);
+
+  // See it.
+  const rect = piano.highlightNote(note, modified);
+
+  if (!rect) {
+    debugger;
+  }
+  // Float it.
+  const noteToPaint = painter.addNote(
+    modified,
+    rect.getAttribute("x"),
+    rect.getAttribute("width")
+  );
+  
+  var result = {
+      rect: rect,
+      note: note,
+      noteToPaint: noteToPaint,
+      timeNow: performance.now()
+  };
+  return result;
+}
+
+function playNoteUp(thing,sustaining){
+  // Don't see it.
+  piano.clearNote(thing.rect);
+
+  // Stop holding it down.
+  painter.stopNote(thing.noteToPaint);
+
+  // Maybe stop hearing it.
+  const pitch = CONSTANTS.LOWEST_PIANO_KEY_MIDI_NOTE + thing.note;
+  if (!sustaining) {
+    player.playNoteUp(pitch, 0);
+  }
+}
+
+function stopSustaining(notes){
+  notes.forEach((note) => player.playNoteUp(note, -1));
 }

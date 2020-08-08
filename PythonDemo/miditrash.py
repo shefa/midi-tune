@@ -3,21 +3,23 @@ from keras.models import load_model
 import numpy as np
 import time
 
-model = load_model('model-best.h5')
-#warm up
-model.predict(np.zeros([1,100,88]))
-#default
 notes_on=[0 for i in range(88)]
 sequence = np.zeros([100,88])
 temp = np.zeros([1,88])
 treshold = 0.02
 corrected = [0 for i in range(88)]
 
+# load model and warm up (first prediction is slower)
+model = load_model('model-best.h5')
+model.predict(np.zeros([1,100,88]))
+
+# get current midi inputs and open Digital Keyboard..
 inputs = mido.get_input_names()
 keyboards = [i for i in mido.get_input_names() if i.startswith('Digital Keyboard')]
 if len(keyboards)==0:
     keyboards=inputs
 
+# open midi input, apply correction with the configured treshold and write to created virtual midi out ("stuffs")
 with mido.open_input(mido.get_input_names()[0]) as port:
     with mido.open_output("stuffs", virtual=True) as out:
         for message in port:

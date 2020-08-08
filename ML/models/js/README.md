@@ -1,0 +1,1 @@
+Contains TensorflowJS trained models of the recurrent neural network defined in model.py

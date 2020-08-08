@@ -11,19 +11,34 @@ from keras.callbacks import Callback
 import wandb
 from bigbrain import toolbar_init, toolbar_tick
 
-sequence_folder = "saved_sequences/"
+# important stuff & helpers here
+# make sure that the folders constants point to existing directories
+data_folder = "saved_data"
+sequence_folder = "saved_sequences"
+models_folder = "models"
 typemap = ['basic', 'basic_velocity', 'delta', 'duration',  'delta_events']
 data_split = ['train', 'validation', 'test']
 
-def make_little(data, sequence_length):
-    s_in, s_out = [], []
-    prev_notes = deque(maxlen=sequence_length)
-    for i in data:
-        if len(prev_notes) == sequence_length:
-            s_in.append(np.array(prev_notes))
-            s_out.append(i%12)
-        prev_notes.append(i)
-    return to_categorical(s_in,num_classes=88,dtype=np.bool), s_out
+def toolbar_init(toolbar_width, cnt):
+    sys.stdout.write("[%s]" % (" " * toolbar_width))
+    sys.stdout.flush()
+    sys.stdout.write("\b" * (toolbar_width+1))
+    return int((cnt+toolbar_width-1)/toolbar_width)
+
+def toolbar_tick(smth):
+    if not smth:
+        sys.stdout.write("-")
+        sys.stdout.flush()
+
+def save_data(s_in, s_out, index=0, suffix='train'):
+    #for i in range(batch_size,len(s_in),batch_size):
+    #    np.save(f'{sequence_folder}/seq-input-{suffix}-{start_index}.npy' , s_in[last_index:i])
+    #    np.save(f'{sequence_folder}/seq-output-{suffix}-{start_index}.npy', s_out[last_index:i])
+    #    last_index = i
+    #    start_index+=1
+
+    np.save(f'{sequence_folder}/seq-input-{suffix}-{index}.npy' , s_in)
+    np.save(f'{sequence_folder}/seq-output-{suffix}-{index}.npy', s_out)
 
 def make_delta_sequences(data,sequence_length):
     # Get a midi sequence in, return sequences of desired length with their target
@@ -52,16 +67,6 @@ def make_delta_sequences(data,sequence_length):
     s_out = s_out[hack]
     return s_in, s_out
 
-def save_data(s_in, s_out, index=0, suffix='train'):
-    #for i in range(batch_size,len(s_in),batch_size):
-    #    np.save(f'{sequence_folder}seq-input-{suffix}-{start_index}.npy' , s_in[last_index:i])
-    #    np.save(f'{sequence_folder}seq-output-{suffix}-{start_index}.npy', s_out[last_index:i])
-    #    last_index = i
-    #    start_index+=1
-
-    np.save(f'{sequence_folder}seq-input-{suffix}-{index}.npy' , s_in)
-    np.save(f'{sequence_folder}seq-output-{suffix}-{index}.npy', s_out)
-
 def data_to_sequences(data, sequence_length, suffix, batch_size, start_index=0):
     s_in = np.empty((0,sequence_length,88+8+12),dtype=np.bool)
     s_out = np.empty((0,1),dtype=np.int8)
@@ -89,7 +94,7 @@ def data_to_sequences(data, sequence_length, suffix, batch_size, start_index=0):
 
 def brain(data_type, sequence_length, batch_size=1024):
     print("Loading dataset..")
-    data_parsed = [pickle.load(open(f'saved_data/rick-{typemap[data_type]}-{x}','rb')) for x in data_split]
+    data_parsed = [pickle.load(open(f'{data_folder}/rick-{typemap[data_type]}-{x}','rb')) for x in data_split]
     print(len(data_parsed[0]),len(data_parsed[1]), len(data_parsed[2]))
     print("generating train..")
     train_cnt, train_x, train_y = data_to_sequences(data_parsed[0][:100], sequence_length, 'train', batch_size)
@@ -99,7 +104,7 @@ def brain(data_type, sequence_length, batch_size=1024):
     print(f'{test_cnt} saved, {len(test_x)} sequences leftover')
     #print("generating validation..")
     #validation_cnt, validation_x, validation_y = data_to_sequences(data_parsed[2], sequence_length, 'validation', batch_size)
-   # print(f'{validation_cnt} saved, {len(validation_x)} sequences leftover')
+    #print(f'{validation_cnt} saved, {len(validation_x)} sequences leftover')
     return train_x.shape[2], train_cnt, test_cnt
 
 
@@ -115,7 +120,7 @@ class DataGenerator(Sequence):
 
         
         print("Loading dataset..")
-        self.data = pickle.load(open(f'saved_data/rick-{typemap[data_type]}-{suffix}','rb'))
+        self.data = pickle.load(open(f'{data_folder}/rick-{typemap[data_type]}-{suffix}','rb'))
         print(len(self.data))
 
         self.s_in = np.empty((0,self.sequence_length,88+8+12),dtype=np.bool)
@@ -124,7 +129,6 @@ class DataGenerator(Sequence):
 
 
     def __len__(self):
-        'Denotes the number of batches per epoch'
         return self.cnt
 
     def __generate(self):
@@ -146,3 +150,7 @@ class DataGenerator(Sequence):
         return self.__serve_from_generated()
 
         #return  np.load(f'saved_sequences/seq-input-{self.suffix}-{index}.npy'), np.load(f'saved_sequences/seq-output-{self.suffix}-{index}.npy')
+
+class CustomCallback(Callback):
+    def on_train_batch_end(self, batch, logs=None):
+        wandb.log({'accuracy': logs['accuracy'], 'loss': logs['loss']})
