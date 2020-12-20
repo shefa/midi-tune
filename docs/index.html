@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
-    
-    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono:400,700" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
     <link id="favicon" rel="icon" href="resources/pictures/icon128.png" type="image/x-icon">
@@ -19,18 +19,21 @@
     <div class="splash">
       <h1>Midi Tune</h1>
       <div class="splash-main">        
-        <p><a target="_blank" href="https://arxiv.org/abs/2011.13122">Real-time error correction and performance aid for MIDI instruments</a> web demo.</p>
-        <p>Just plug in your MIDI Keyboard (+sustain pedal) and enjoy playing piano with the occasional help of AI.</p>
-        <p>While playing, the AI will try to correct your errors or play something that it finds more fitting :)</p>
-
+        <p>Hello! Here you can play the piano with the occasional help of AI!</p>
+        <p>While playing, the AI will try to correct your errors or play something that it finds more fitting, depending on the settings</p>
+        <p>Plug in your MIDI Keyboard (+sustain pedal) and try it out!</p>
+        <br>
         <button class="splash-button loading" id="playBtn" disabled onclick="showMainScreen()" autofocus><span>Loading...</span></button>
       </div>
+      
       <p class="built-with">
-        Built with <a target="_blank" href="https://magenta.tensorflow.org">magenta.js</a> and <a target="_blank" href="https://www.tensorflow.org/js">tensorflow.js</a>, forked from <a target="_blank" href="https://glitch.com/edit/#!/piano-genie">Piano Genie</a>.
+        Built with <a target="_blank" href="https://magenta.tensorflow.org">magenta.js</a> and <a target="_blank" href="https://www.tensorflow.org/js">tensorflow.js</a>, forked from <a target="_blank" href="https://glitch.com/edit/#!/piano-genie">Piano Genie</a>
       </p>
-      <p class="built-with">
-        Note: The original RNN models were quantized for this demo, sacrificing accuracy for the ability to be ran in the browser from any device.
-      </p>
+      <p>Web demo for <a target="_blank" href="https://arxiv.org/abs/2011.13122">Real-time error correction and performance aid for MIDI instruments</a>
+       research paper</p>
+
+      <p>Note: The original RNN models were <a target="_blank" href="https://www.tensorflow.org/lite/performance/post_training_quantization">quantized</a> for this demo, sacrificing model accuracy for the a decent inference latency when ran in the browser </p>
+        
     </div>
     
     <div class="loaded" hidden>

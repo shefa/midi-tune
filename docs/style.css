@@ -8,7 +8,8 @@ body {
   background: #141E30;
   background: linear-gradient(to bottom, #243B55, #141E30);
   color: white;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Roboto Mono', monospace;
+  /*font-family: 'Roboto', sans-serif;*/
   display: flex;
   flex-direction: column;
   align-items: center;
